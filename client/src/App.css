@@ -1,0 +1,57 @@
+/* Gaya utama aplikasi BarbekRaft */
+
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.App {
+  min-height: 100vh;
+}
+
+.card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 8px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0 !important;
+  font-weight: 600;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+}
+
+.btn {
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+@media print {
+  .navbar, .form-control, .alert, .btn {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 100%;
+  }
+}
