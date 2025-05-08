@@ -8,13 +8,21 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
   const [difficulty, setDifficulty] = useState('semua');
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(null);
   
-  // Generate image when suggestion changes
+  // Set the active suggestion initially
   useEffect(() => {
-    if (suggestion && !isLoading && suggestion.imagePrompt) {
-      generateImage(suggestion.imagePrompt);
+    if (suggestion && !isLoading) {
+      setActiveSuggestion(suggestion);
     }
   }, [suggestion, isLoading]);
+  
+  // Generate image when active suggestion changes
+  useEffect(() => {
+    if (activeSuggestion && !isLoading && activeSuggestion.imagePrompt) {
+      generateImage(activeSuggestion.imagePrompt);
+    }
+  }, [activeSuggestion, isLoading]);
   
   const generateImage = async (prompt) => {
     try {
@@ -57,7 +65,8 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
         } else {
           // For single object, use category
           const category = getCraftCategory(suggestion.nama);
-          filteredCrafts = Object.values(response.data)
+          filteredCrafts = Object.entries(response.data)
+            .map(([key, value]) => ({ id: key, ...value })) // Convert to array with key as id
             .filter(craft => getCraftCategory(craft.nama) === category && craft.nama !== suggestion.nama);
         }
         
@@ -126,14 +135,14 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
   
   // Menampilkan instruksi yang tersaring berdasarkan tingkat kesulitan
   const getFilteredSuggestion = () => {
-    if (difficulty === 'semua' || !suggestion) return suggestion;
+    if (difficulty === 'semua' || !activeSuggestion) return activeSuggestion;
     
-    const difficultyLevel = getDifficultyLabel(suggestion.langkah, suggestion.tingkatKesulitan);
+    const difficultyLevel = getDifficultyLabel(activeSuggestion.langkah, activeSuggestion.tingkatKesulitan);
     if (difficulty === 'mudah' && difficultyLevel !== 'Mudah') return null;
     if (difficulty === 'sedang' && difficultyLevel !== 'Sedang') return null;
     if (difficulty === 'sulit' && difficultyLevel !== 'Sulit') return null;
     
-    return suggestion;
+    return activeSuggestion;
   };
   
   const filteredSuggestion = getFilteredSuggestion();
@@ -153,6 +162,17 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
     if (category === 'Rendah') return 'success';
     if (category === 'Sedang') return 'warning';
     return 'danger';
+  };
+
+  // Handle clicking on an alternative suggestion
+  const handleAlternativeClick = (altSuggestion) => {
+    setGeneratedImage(null); // Reset the generated image
+    setActiveSuggestion(altSuggestion);
+    // Scroll to the top of the craft suggestion section
+    window.scrollTo({
+      top: document.getElementById('craft-suggestion-top').offsetTop - 100,
+      behavior: 'smooth'
+    });
   };
 
   if (isLoading) {
@@ -204,16 +224,16 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
   }
 
   // Get material cost estimate
-  const costEstimate = getEstimatedCost(suggestion.bahan);
+  const costEstimate = getEstimatedCost(activeSuggestion.bahan);
   const detectedItemsText = detectedObjects && detectedObjects.length > 0 
     ? detectedObjects.map(obj => obj.mappedClass).filter((v, i, a) => a.indexOf(v) === i).join(', ') 
     : '';
 
   return (
-    <div className="card">
-      <div className="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+    <div className="card craft-suggestion-card" id="craft-suggestion-top">
+      <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 className="mb-0">
-          {suggestion.isMulti && <span className="badge bg-info me-2">Kombinasi</span>}
+          {activeSuggestion.isMulti && <span className="badge bg-info me-2">Kombinasi</span>}
           Saran Kerajinan
         </h5>
         <div>
@@ -232,7 +252,7 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
       <div className="card-body">
         <div className="row">
           <div className="col-lg-5 mb-4">
-            <div className="position-relative">
+            <div className="position-relative craft-image-container">
               {isGeneratingImage ? (
                 <div className="text-center p-4 bg-light rounded">
                   <div className="spinner-border text-primary" role="status">
@@ -243,23 +263,23 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
               ) : generatedImage ? (
                 <img 
                   src={generatedImage} 
-                  alt={suggestion.nama} 
+                  alt={activeSuggestion.nama} 
                   className="img-fluid rounded fade-in shadow-sm"
-                  style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '300px', objectFit: 'cover' }}
                 />
               ) : (
                 <img 
-                  src={suggestion.image || `https://via.placeholder.com/400x300?text=${encodeURIComponent(suggestion.nama)}`}
-                  alt={suggestion.nama} 
+                  src={activeSuggestion.image || `https://via.placeholder.com/400x300?text=${encodeURIComponent(activeSuggestion.nama)}`}
+                  alt={activeSuggestion.nama} 
                   className="img-fluid rounded shadow-sm"
-                  style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '300px', objectFit: 'cover' }}
                 />
               )}
               
               <div className="mt-2 d-flex justify-content-between">
-                <span className={`badge bg-${getDifficultyColor(getDifficultyLabel(suggestion.langkah, suggestion.tingkatKesulitan))}`}>
+                <span className={`badge bg-${getDifficultyColor(getDifficultyLabel(activeSuggestion.langkah, activeSuggestion.tingkatKesulitan))}`}>
                   <i className="bi bi-tools me-1"></i>
-                  {getDifficultyLabel(suggestion.langkah, suggestion.tingkatKesulitan)}
+                  {getDifficultyLabel(activeSuggestion.langkah, activeSuggestion.tingkatKesulitan)}
                 </span>
                 
                 <span className={`badge bg-${getCostBadgeColor(costEstimate.category)}`}>
@@ -267,19 +287,19 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
                   {costEstimate.text}
                 </span>
                 
-                {suggestion.estimasiWaktu && (
+                {activeSuggestion.estimasiWaktu && (
                   <span className="badge bg-info">
                     <i className="bi bi-clock-history me-1"></i>
-                    {suggestion.estimasiWaktu}
+                    {activeSuggestion.estimasiWaktu}
                   </span>
                 )}
               </div>
               
-              {suggestion.kategori && (
+              {activeSuggestion.kategori && (
                 <div className="mt-2">
                   <span className="badge bg-secondary">
                     <i className="bi bi-tag me-1"></i>
-                    {suggestion.kategori}
+                    {activeSuggestion.kategori}
                   </span>
                 </div>
               )}
@@ -296,14 +316,14 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
           </div>
           
           <div className="col-lg-7">
-            <h4 className="card-title mb-3">{suggestion.nama}</h4>
+            <h4 className="card-title mb-3">{activeSuggestion.nama}</h4>
             
             <h6 className="mt-4 mb-3">
               <i className="bi bi-basket me-2 text-success"></i>
               Bahan yang Dibutuhkan:
             </h6>
             <ul className="list-group list-group-flush mb-4">
-              {suggestion.bahan && suggestion.bahan.map((item, index) => (
+              {activeSuggestion.bahan && activeSuggestion.bahan.map((item, index) => (
                 <li key={index} className="list-group-item d-flex align-items-center py-2">
                   <i className="bi bi-check-circle-fill text-success me-2"></i>
                   <span>{item}</span>
@@ -316,7 +336,7 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
               Langkah-langkah Pembuatan:
             </h6>
             <ol className="list-group list-group-numbered mb-4">
-              {suggestion.langkah && suggestion.langkah.map((step, index) => (
+              {activeSuggestion.langkah && activeSuggestion.langkah.map((step, index) => (
                 <li key={index} className="list-group-item d-flex py-2">
                   <div className="ms-2 me-auto">
                     <div>{step}</div>
@@ -347,10 +367,10 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
                 )}
               </button>
               
-              {!generatedImage && suggestion.imagePrompt && (
+              {!generatedImage && activeSuggestion.imagePrompt && (
                 <button 
                   className="btn btn-info mb-2" 
-                  onClick={() => generateImage(suggestion.imagePrompt)}
+                  onClick={() => generateImage(activeSuggestion.imagePrompt)}
                   disabled={isGeneratingImage}
                 >
                   {isGeneratingImage ? (
@@ -378,7 +398,10 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
             <div className="row mt-3">
               {alternativeSuggestions.map((alt, index) => (
                 <div key={index} className="col-md-4 mb-3">
-                  <div className="card h-100 suggestion-card">
+                  <div 
+                    className={`card h-100 suggestion-card ${activeSuggestion.nama === alt.nama ? 'active-suggestion' : ''}`}
+                    onClick={() => handleAlternativeClick(alt)}
+                  >
                     <div className="card-header py-2 bg-light">
                       <h6 className="mb-0 text-center">{alt.nama}</h6>
                     </div>
@@ -387,7 +410,7 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
                         src={alt.image || `https://via.placeholder.com/150?text=${encodeURIComponent(alt.nama)}`} 
                         alt={alt.nama} 
                         className="img-fluid rounded mb-2" 
-                        style={{ maxHeight: '120px', objectFit: 'cover' }}
+                        style={{ height: '120px', objectFit: 'cover' }}
                       />
                       <div className="mt-2">
                         <span className={`badge bg-${getDifficultyColor(getDifficultyLabel(alt.langkah, alt.tingkatKesulitan))}`}>
@@ -399,6 +422,11 @@ function CraftSuggestion({ suggestion, isLoading, detectedObjects }) {
                           </span>
                         )}
                       </div>
+                    </div>
+                    <div className="card-footer text-center p-2">
+                      <button className="btn btn-sm btn-primary">
+                        <i className="bi bi-eye me-1"></i> Pilih
+                      </button>
                     </div>
                   </div>
                 </div>

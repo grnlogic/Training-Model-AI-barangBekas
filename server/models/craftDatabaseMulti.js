@@ -317,6 +317,185 @@ const craftDatabaseMulti = [
     estimasiWaktu: '3-4 jam',
     kombinasi: ['botol', 'sedotan'],
     imagePrompt: 'A mechanical light decoration made from a clear plastic bottle containing colorful straw structures resembling atoms or molecules, illuminated by LED lights from below'
+  },
+  {
+    id: 'kain-kardus-tutup-botol-1',
+    nama: 'Papan Permainan Daur Ulang',
+    bahan: ['kardus besar', 'kain bekas', 'tutup botol berbagai warna', 'lem', 'gunting', 'penggaris', 'cat akrilik', 'kuas'],
+    langkah: [
+      'Potong kardus sesuai ukuran papan permainan yang diinginkan',
+      'Lapisi bagian atas kardus dengan kain',
+      'Gambar jalur permainan pada kain dengan cat',
+      'Cat tutup botol sebagai bidak permainan',
+      'Buat kartu permainan dari kardus sisa',
+      'Tulis aturan permainan pada kertas terpisah',
+      'Buat kotak penyimpanan untuk komponen permainan dari kardus sisa',
+      'Permainan siap dimainkan'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Mainan',
+    estimasiWaktu: '3-4 jam',
+    kombinasi: ['kardus', 'kain', 'tutup-botol'],
+    imagePrompt: 'A recycled board game made from cardboard covered with fabric, with bottle cap game pieces painted in different colors'
+  },
+  {
+    id: 'kaleng-sendok-garpu-1',
+    nama: 'Alat Musik Perkusi Mini',
+    bahan: ['kaleng berbagai ukuran', 'sendok dan garpu plastik bekas', 'karet gelang', 'lem tahan panas', 'cat', 'manik-manik atau biji-bijian'],
+    langkah: [
+      'Bersihkan kaleng dan pastikan tidak ada bagian tajam',
+      'Cat kaleng dengan warna-warna cerah',
+      'Isi beberapa kaleng dengan manik-manik atau biji-bijian untuk efek suara',
+      'Tutup kaleng yang diisi dengan karet atau balon yang diregangkan',
+      'Gunakan sendok atau garpu sebagai pemukul',
+      'Rekatkan beberapa kaleng bersama untuk membuat set perkusi lengkap',
+      'Hiasi dengan pola dan warna menarik'
+    ],
+    tingkatKesulitan: 'Mudah',
+    kategori: 'Alat Musik',
+    estimasiWaktu: '2 jam',
+    kombinasi: ['kaleng', 'sendok-garpu'],
+    imagePrompt: 'Mini percussion instruments made from painted cans of different sizes, some filled with beads, with plastic spoons as drumsticks'
+  },
+  {
+    id: 'botol-kayu-1',
+    nama: 'Lampu Meja Rustik',
+    bahan: ['botol kaca/plastik besar', 'potongan kayu atau ranting sebagai alas', 'lampu LED dengan baterai', 'lem tahan panas', 'amplas', 'pernis kayu'],
+    langkah: [
+      'Amplas potongan kayu hingga halus',
+      'Buat lubang di tengah kayu seukuran botol',
+      'Pernis kayu untuk tampilan lebih menarik',
+      'Bersihkan botol dan lepaskan label',
+      'Pasang lampu LED di dalam botol',
+      'Pasang botol pada lubang di alas kayu',
+      'Kencangkan dengan lem tahan panas jika perlu',
+      'Lampu meja siap digunakan'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Pencahayaan',
+    estimasiWaktu: '2-3 jam',
+    kombinasi: ['botol', 'kayu'],
+    imagePrompt: 'Rustic table lamp made from glass bottle on wooden base with LED lights inside the bottle'
+  },
+  {
+    id: 'koran-botol-sedotan-1',
+    nama: 'Model Pesawat Daur Ulang',
+    bahan: ['botol plastik (badan pesawat)', 'koran bekas (untuk sayap)', 'sedotan plastik (detail)', 'lem', 'gunting', 'cat', 'penggaris'],
+    langkah: [
+      'Gunakan botol sebagai badan pesawat',
+      'Buat sayap dari kardus yang dilapisi koran yang dipadatkan',
+      'Gunakan sedotan untuk detail seperti antena dan penyangga',
+      'Rekatkan semua bagian dengan lem',
+      'Cat seluruh pesawat dengan warna yang diinginkan',
+      'Tambahkan detail seperti jendela dan pintu',
+      'Buat penyangga dari sedotan agar pesawat bisa berdiri',
+      'Model pesawat siap dipajang'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Model & Miniatur',
+    estimasiWaktu: '3-4 jam',
+    kombinasi: ['botol', 'koran', 'sedotan'],
+    imagePrompt: 'Model airplane made from plastic bottle for fuselage, newspaper wings, and plastic straws for details, painted realistically'
+  },
+  {
+    id: 'cd-kardus-botol-1',
+    nama: 'Robot Mainan Futuristik',
+    bahan: ['kardus bekas', 'CD bekas', 'botol plastik kecil', 'lem tahan panas', 'cat, aluminium foil', 'kawat', 'komponen elektronik bekas (opsional)'],
+    langkah: [
+      'Buat badan robot dari kardus',
+      'Gunakan CD sebagai bagian dada atau perisai',
+      'Potong botol plastik untuk kepala atau helm',
+      'Gunakan aluminium foil untuk melapisi bagian tertentu',
+      'Tambahkan kawat sebagai antena',
+      'Rekatkan semua bagian dengan lem tahan panas',
+      'Cat dengan warna metalik atau warna cerah',
+      'Tambahkan detail dengan komponen elektronik bekas jika ada'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Mainan',
+    estimasiWaktu: '3-4 jam',
+    kombinasi: ['cd', 'kardus', 'botol'],
+    imagePrompt: 'Futuristic toy robot made from cardboard body, CD chest plate, bottle head, covered in aluminum foil with wire antennas'
+  },
+  {
+    id: 'kain-kaleng-sedotan-1',
+    nama: 'Alat Musik Rainstick',
+    bahan: ['kaleng panjang atau mailing tube', 'kain bekas', 'sedotan plastik', 'beras atau kacang kering', 'lem tahan panas', 'gunting', 'cat akrilik'],
+    langkah: [
+      'Potong sedotan menjadi potongan yang lebih pendek dari panjang kaleng',
+      'Tusuk sedotan dengan jarum dan masukkan kawat tipis untuk membuat spiral',
+      'Pasang sedotan di dalam kaleng dengan pola spiral',
+      'Tutup satu ujung kaleng dengan kain dan karet gelang',
+      'Masukkan beras atau kacang kering secukupnya',
+      'Tutup ujung lainnya dengan kain',
+      'Hiasi bagian luar dengan cat atau kain tambahan',
+      'Putar perlahan untuk menghasilkan suara hujan'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Alat Musik',
+    estimasiWaktu: '2 jam',
+    kombinasi: ['kaleng', 'kain', 'sedotan'],
+    imagePrompt: 'Rainstick musical instrument made from long tube with fabric ends, filled with rice grains and plastic straws inside, decorated with colorful patterns'
+  },
+  {
+    id: 'botol-kain-cd-1',
+    nama: 'Windchime Reflektif',
+    bahan: ['botol plastik bekas', 'CD bekas', 'kain bekas', 'benang nilon', 'bor atau paku panas', 'gunting', 'manik-manik'],
+    langkah: [
+      'Potong botol plastik menjadi bentuk-bentuk seperti daun atau bunga',
+      'Potong CD menjadi potongan-potongan kecil berbentuk segitiga atau berlian',
+      'Buat lubang kecil di setiap potongan dengan bor atau paku panas',
+      'Potong kain menjadi bentuk menarik seperti bintang atau lingkaran',
+      'Rangkai semua bagian dengan benang nilon pada berbagai panjang',
+      'Tambahkan manik-manik untuk hiasan tambahan',
+      'Gantung semua rangkaian dari lingkaran atau kayu sebagai penyangga',
+      'Windchime siap dipasang di teras atau jendela'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Dekorasi Outdoor',
+    estimasiWaktu: '2-3 jam',
+    kombinasi: ['botol', 'kain', 'cd'],
+    imagePrompt: 'Reflective windchime made from fabric shapes, CD pieces, and plastic bottle cutouts, hanging from circular frame, catching light and making gentle sounds in breeze'
+  },
+  {
+    id: 'sendok-garpu-tutup-botol-1',
+    nama: 'Hiasan Mozaik Taman',
+    bahan: ['sendok dan garpu plastik bekas', 'tutup botol berbagai warna', 'batu atau paving bekas', 'lem khusus outdoor', 'cat tahan air'],
+    langkah: [
+      'Bersihkan batu atau paving yang akan dihias',
+      'Desain pola mozaik pada permukaan batu',
+      'Tempelkan tutup botol pada pola yang sudah dibuat',
+      'Tempelkan kepala sendok/garpu di antara tutup botol untuk efek tekstur',
+      'Pastikan semua bagian terekat kuat',
+      'Tambahkan lapisan lem tahan air di atas seluruh mozaik',
+      'Biarkan kering sepenuhnya',
+      'Letakkan di taman sebagai hiasan'
+    ],
+    tingkatKesulitan: 'Mudah',
+    kategori: 'Dekorasi Taman',
+    estimasiWaktu: '2 jam',
+    kombinasi: ['sendok-garpu', 'tutup-botol'],
+    imagePrompt: 'Garden mosaic decoration made on stone pavers using colorful bottle caps and plastic cutlery heads, creating patterns for outdoor display'
+  },
+  {
+    id: 'koran-botol-kayu-1',
+    nama: 'Kotak Hadiah Ekologis',
+    bahan: ['botol plastik (untuk struktur)', 'koran bekas', 'potongan kayu tipis', 'lem', 'gunting', 'cat', 'tali', 'kertas daur ulang'],
+    langkah: [
+      'Potong botol plastik menjadi bentuk dasar kotak',
+      'Lapisi dengan kertas koran yang sudah dicat',
+      'Tambahkan potongan kayu tipis untuk dekorasi di bagian luar',
+      'Buat tutup yang sesuai dari bagian lain botol',
+      'Pasang tali sebagai pegangan',
+      'Tambahkan hiasan dari kertas daur ulang',
+      'Cat seluruh kotak sesuai kesukaan',
+      'Biarkan kering sebelum digunakan'
+    ],
+    tingkatKesulitan: 'Sedang',
+    kategori: 'Kemasan Hadiah',
+    estimasiWaktu: '2-3 jam',
+    kombinasi: ['botol', 'koran', 'kayu'],
+    imagePrompt: 'Eco-friendly gift box made from plastic bottle structure covered with painted newspaper, thin wood decorations, and recycled paper embellishments'
   }
 ];
 

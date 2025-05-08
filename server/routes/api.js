@@ -89,7 +89,20 @@ const objectMapping = {
   'chopsticks': 'sendok-garpu',
   
   // Sedotan (tidak ada kategori langsung di COCO-SSD, jadi ini perkiraan)
-  'straw': 'sedotan'
+  'straw': 'sedotan',
+  
+  // Tambahan item umum rumah tangga
+  'scissors': 'sendok-garpu',
+  'hairbrush': 'sisir',
+  'comb': 'sisir',
+  'toys': 'mainan',
+  'toy': 'mainan',
+  'spatula': 'spatula',
+  'umbrella': 'payung',
+  'pillow': 'kain',
+  'towel': 'kain',
+  'blanket': 'kain',
+  'curtain': 'kain'
 };
 
 // Route untuk mendapatkan saran kerajinan berdasarkan objek yang terdeteksi (termasuk multi-objek)
@@ -149,12 +162,16 @@ router.post('/suggest', (req, res) => {
         const randomMultiCraft = matchingMultiCrafts[Math.floor(Math.random() * matchingMultiCrafts.length)];
         
         console.log('Merekomendasikan kerajinan multi-objek:', randomMultiCraft.id);
+
+        // Generate image prompt jika belum ada
+        const imagePrompt = randomMultiCraft.imagePrompt || `A creative craft made from recycled materials: ${randomMultiCraft.nama}, made from ${randomMultiCraft.kombinasi.join(', ')}`;
         
         return res.json({
           success: true,
           suggestion: {
             ...randomMultiCraft,
-            isMulti: true
+            isMulti: true,
+            imagePrompt
           },
           detectedObjects: objects.map(obj => ({
             class: obj.class,
@@ -175,12 +192,17 @@ router.post('/suggest', (req, res) => {
         const randomCraftKey = craftKeys[Math.floor(Math.random() * craftKeys.length)];
         
         console.log('Merekomendasikan kerajinan single-object:', randomCraftKey);
+
+        // Generate image prompt jika belum ada
+        const craftItem = craftDatabase[randomCraftKey];
+        const imagePrompt = craftItem.imagePrompt || `A creative DIY craft: ${craftItem.nama}, made from recycled ${mappedObj}, upcycled and artistic`;
         
         return res.json({
           success: true,
           suggestion: {
             ...craftDatabase[randomCraftKey],
-            isMulti: false
+            isMulti: false,
+            imagePrompt
           },
           detectedObjects: objects.map(obj => ({
             class: obj.class,
@@ -199,7 +221,8 @@ router.post('/suggest', (req, res) => {
         bahan: ['Barang yang terdeteksi tidak ada dalam database kami'],
         langkah: ['Silakan coba unggah gambar dengan barang bekas yang lain seperti botol, kaleng, kardus, kain, atau koran'],
         image: 'https://via.placeholder.com/150?text=Tidak+Ditemukan',
-        isMulti: false
+        isMulti: false,
+        imagePrompt: 'Generic recycling crafts with household items like bottles, cans, cardboard, and fabric'
       },
       detectedObjects: objects.map(obj => ({
         class: obj.class,
@@ -228,25 +251,96 @@ router.post('/generate-image', (req, res) => {
       });
     }
     
-    // Di sini Anda dapat mengintegrasikan dengan API generasi gambar seperti OpenAI DALL-E
-    // Untuk contoh ini, kita akan menggunakan placeholder dengan prompt sebagai referensi
+    // Untuk implementasi produksi, Anda bisa menggunakan layanan AI seperti:
+    // 1. OpenAI DALL-E API
+    // 2. Stable Diffusion API
+    // 3. Midjourney API
+    // 4. dll
+    
+    // Enhanceed prompt untuk hasil yang lebih baik
+    const enhancedPrompt = `${prompt}, high quality, detailed, vibrant colors, natural lighting, sustainable, upcycled, eco-friendly`;
     
     // Enkode prompt untuk URL
-    const encodedPrompt = encodeURIComponent(prompt);
+    const encodedPrompt = encodeURIComponent(enhancedPrompt);
     
-    // Buat URL placeholder dengan prompt
+    // Untuk demo, kita gunakan Unsplash API dengan keyword dari prompt
+    const keywords = extractKeywords(prompt);
     const imageUrl = `https://source.unsplash.com/featured/?${encodedPrompt}`;
     
     // Return URL gambar
     return res.json({
       success: true,
-      imageUrl: imageUrl
+      imageUrl: imageUrl,
+      prompt: enhancedPrompt
     });
   } catch (error) {
     console.error('Error dalam API generate-image:', error);
     res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan saat menghasilkan gambar'
+    });
+  }
+});
+
+// Fungsi untuk mengekstrak keyword dari prompt
+function extractKeywords(prompt) {
+  // Hapus kata-kata umum
+  const commonWords = ['a', 'an', 'the', 'and', 'or', 'but', 'with', 'from', 'made', 'using', 'of', 'in', 'on', 'by', 'to'];
+  
+  // Pisahkan prompt menjadi kata-kata
+  const words = prompt.toLowerCase().split(/\s+/);
+  
+  // Filter kata-kata umum
+  const keywords = words.filter(word => {
+    // Hapus karakter non-alfanumerik
+    const cleanWord = word.replace(/[^\w\s]/gi, '');
+    // Filter kata-kata pendek dan kata-kata umum
+    return cleanWord.length > 3 && !commonWords.includes(cleanWord);
+  });
+  
+  // Ambil maksimal 3 keyword
+  return [...new Set(keywords)].slice(0, 3).join(',');
+}
+
+// Route untuk mendapatkan kerajinan spesifik berdasarkan ID
+router.get('/craft/:id', (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Cari di database single-object
+    const craftKeys = Object.keys(craftDatabase);
+    if (craftKeys.includes(id)) {
+      return res.json({
+        success: true,
+        craft: {
+          ...craftDatabase[id],
+          isMulti: false
+        }
+      });
+    }
+    
+    // Cari di database multi-object
+    const multiCraft = craftDatabaseMulti.find(craft => craft.id === id);
+    if (multiCraft) {
+      return res.json({
+        success: true,
+        craft: {
+          ...multiCraft,
+          isMulti: true
+        }
+      });
+    }
+    
+    // Jika tidak ditemukan
+    return res.status(404).json({
+      success: false,
+      message: 'Kerajinan tidak ditemukan'
+    });
+  } catch (error) {
+    console.error('Error dalam API get craft:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan saat mengambil data kerajinan'
     });
   }
 });

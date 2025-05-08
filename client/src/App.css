@@ -1,9 +1,11 @@
-/* Gaya utama aplikasi BarbekRaft dengan UI modern */
+/* Gaya utama aplikasi BarbekRaft dengan UI modern dan aesthetic */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
   --primary-color: #2ecc71;
   --primary-dark: #27ae60;
+  --primary-light: #a9f5bc;
+  --primary-ultra-light: #e8f8ee;
   --secondary-color: #3498db;
   --secondary-dark: #2980b9;
   --accent-color: #f39c12;
@@ -16,9 +18,9 @@
   --gray-color: #6c757d;
   --light-gray: #e9ecef;
   --white-color: #ffffff;
-  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -42,9 +44,12 @@ body {
 
 /* Navbar styling */
 .navbar {
-  background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   box-shadow: var(--shadow-md);
   padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar-brand {
@@ -62,6 +67,31 @@ body {
   color: rgba(255, 255, 255, 0.9) !important;
   font-weight: 300;
   letter-spacing: 0.5px;
+}
+
+.nav-link {
+  position: relative;
+  padding: 0.6rem 1rem !important;
+  margin: 0 0.2rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.nav-link:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--white-color);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover:after,
+.nav-link.active:after {
+  width: 80%;
 }
 
 /* Card styling */
@@ -99,9 +129,14 @@ body {
   letter-spacing: 0.3px;
   transition: var(--transition);
   text-transform: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn::after {
@@ -140,6 +175,7 @@ body {
 .btn-outline-primary:hover {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
+  color: white;
 }
 
 .btn-success {
@@ -170,6 +206,11 @@ body {
 .btn-warning {
   background-color: var(--warning-color);
   border-color: var(--warning-color);
+}
+
+.btn-sm {
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
 }
 
 .btn i {
@@ -210,7 +251,7 @@ body {
 }
 
 .list-group-item:hover {
-  background-color: rgba(52, 152, 219, 0.05);
+  background-color: var(--primary-ultra-light);
 }
 
 .list-group-item:first-child {
@@ -219,6 +260,24 @@ body {
 
 .list-group-item:last-child {
   border-bottom: none;
+}
+
+.list-group-numbered .list-group-item {
+  position: relative;
+}
+
+.list-group-numbered .list-group-item::before {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-right: 0.75rem;
 }
 
 /* Alerts */
@@ -321,17 +380,23 @@ body {
 .suggestion-card {
   transition: var(--transition);
   cursor: pointer;
+  border: 2px solid transparent;
 }
 
 .suggestion-card:hover {
   transform: translateY(-10px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
 }
 
-/* Material icon styling */
-.material-icons {
-  vertical-align: middle;
-  margin-right: 0.25rem;
+.suggestion-card.active-suggestion {
+  border-color: var(--primary-color);
+  background-color: var(--primary-ultra-light);
+}
+
+.suggestion-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid var(--light-gray);
 }
 
 /* Difficulty badges */
@@ -382,13 +447,42 @@ body {
   transition: var(--transition);
 }
 
+/* Craft image container */
+.craft-image-container {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.craft-image-container:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.craft-image-container img {
+  transition: transform 0.5s ease;
+}
+
+.craft-image-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Craft suggestion card */
+.craft-suggestion-card {
+  box-shadow: var(--shadow-lg);
+}
+
+.craft-suggestion-card .card-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
 /* Detection result styling */
 .detection-item {
   display: flex;
   align-items: center;
   padding: 1rem;
   border-radius: var(--radius-md);
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--white-color);
   margin-bottom: 0.5rem;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
@@ -397,6 +491,7 @@ body {
 .detection-item:hover {
   box-shadow: var(--shadow-md);
   transform: translateX(5px);
+  background-color: var(--primary-ultra-light);
 }
 
 .detection-item-icon {
@@ -407,7 +502,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-right: 1rem;
-  background-color: var(--light-gray);
+  background-color: var(--primary-ultra-light);
   color: var(--primary-color);
 }
 
@@ -418,6 +513,30 @@ body {
 .detection-item-confidence {
   width: 60px;
   text-align: right;
+  font-weight: 600;
+}
+
+/* Upload area styling */
+.upload-area {
+  border-radius: var(--radius-md);
+  border-style: dashed !important;
+  padding: 2rem !important;
+  transition: var(--transition);
+}
+
+.upload-area:hover {
+  background-color: var(--primary-ultra-light);
+  border-color: var(--primary-color);
+}
+
+.upload-area i {
+  font-size: 3rem;
+  color: var(--primary-color);
+  transition: var(--transition);
+}
+
+.upload-area:hover i {
+  transform: scale(1.1);
 }
 
 /* Animation for loading states */
@@ -443,6 +562,25 @@ body {
   color: var(--white-color);
   padding: 2rem 0;
   margin-top: auto;
+}
+
+.footer a {
+  color: rgba(255, 255, 255, 0.7);
+  transition: var(--transition);
+}
+
+.footer a:hover {
+  color: var(--white-color);
+  text-decoration: none;
+}
+
+.footer .social-links a {
+  font-size: 1.2rem;
+  transition: var(--transition);
+}
+
+.footer .social-links a:hover {
+  transform: translateY(-3px);
 }
 
 /* Print styles */
@@ -486,71 +624,33 @@ body {
   animation: fadeIn 0.5s ease-in;
 }
 
-/* Image comparison slider */
-.image-comparison {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
+/* Intro section styling */
+.intro-card {
+  transition: var(--transition);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-}
-
-.image-comparison img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  overflow: hidden;
   height: 100%;
-  object-fit: cover;
 }
 
-.image-comparison .after {
-  clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+.intro-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-lg);
 }
 
-.image-comparison .slider {
-  position: absolute;
-  width: 4px;
-  height: 100%;
-  background-color: var(--white-color);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+.intro-card .card-body {
+  padding: 1.8rem;
+  text-align: center;
 }
 
-.image-comparison .slider-button {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--white-color);
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  cursor: ew-resize;
-  z-index: 11;
-  box-shadow: var(--shadow-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.intro-card i {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  transition: var(--transition);
 }
 
-.image-comparison .slider-button::before,
-.image-comparison .slider-button::after {
-  content: '';
-  width: 8px;
-  height: 2px;
-  background-color: var(--dark-color);
-  position: absolute;
-}
-
-.image-comparison .slider-button::before {
-  transform: translate(-5px, 0) rotate(45deg);
-}
-
-.image-comparison .slider-button::after {
-  transform: translate(5px, 0) rotate(-45deg);
+.intro-card:hover i {
+  transform: scale(1.2);
 }
 
 /* Mobile responsive adjustments */
