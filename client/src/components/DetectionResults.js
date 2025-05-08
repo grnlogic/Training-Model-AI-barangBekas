@@ -154,18 +154,60 @@ const craftCategoryMapping = {
   'straw': 'Sedotan'
 };
 
+// Icon mapping for each category
+const categoryIcons = {
+  'Botol Plastik': 'bi-droplet',
+  'Botol/Gelas': 'bi-cup',
+  'Botol/Wadah': 'bi-droplet',
+  'Kaleng/Gelas': 'bi-cup-straw',
+  'Kaleng/Wadah': 'bi-archive',
+  'Kardus': 'bi-box',
+  'Kardus/Kain': 'bi-box-seam',
+  'Kain': 'bi-scissors',
+  'Kertas/Koran': 'bi-newspaper',
+  'Koran': 'bi-newspaper',
+  'Elektronik': 'bi-phone',
+  'Ban': 'bi-circle',
+  'Ban & Logam': 'bi-bicycle',
+  'Kayu': 'bi-tree',
+  'CD/DVD': 'bi-disc',
+  'Tutup Botol': 'bi-record-circle',
+  'Sendok/Garpu': 'bi-egg-fried',
+  'Sedotan': 'bi-funnel',
+  'default': 'bi-question-circle'
+};
+
+// Function to get icon for category
+const getCategoryIcon = (category) => {
+  return categoryIcons[category] || categoryIcons['default'];
+};
+
+// Function to get color for confidence level
+const getConfidenceColor = (score) => {
+  if (score >= 0.8) return 'success';
+  if (score >= 0.6) return 'info';
+  if (score >= 0.4) return 'warning';
+  return 'danger';
+};
+
 function DetectionResults({ objects, isLoading }) {
   if (isLoading) {
     return (
       <div className="card mb-4">
         <div className="card-header bg-info text-white">
-          <h5 className="mb-0">Hasil Deteksi</h5>
+          <h5 className="mb-0">
+            <i className="bi bi-search me-2"></i>
+            Hasil Deteksi
+          </h5>
         </div>
         <div className="card-body text-center">
-          <div className="spinner-border text-info" role="status">
+          <div className="spinner-border text-info pulse-animation" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-2">Memproses hasil deteksi...</p>
+          <p className="mt-3">Memproses hasil deteksi...</p>
+          <div className="progress">
+            <div className="progress-bar progress-bar-striped progress-bar-animated bg-info" style={{ width: '80%' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -175,12 +217,21 @@ function DetectionResults({ objects, isLoading }) {
     return (
       <div className="card mb-4">
         <div className="card-header bg-info text-white">
-          <h5 className="mb-0">Hasil Deteksi</h5>
+          <h5 className="mb-0">
+            <i className="bi bi-search me-2"></i>
+            Hasil Deteksi
+          </h5>
         </div>
         <div className="card-body">
-          <p className="text-center">
-            Unggah gambar untuk melihat hasil deteksi barang bekas.
-          </p>
+          <div className="text-center py-4">
+            <i className="bi bi-camera text-info" style={{ fontSize: '3rem' }}></i>
+            <p className="mt-3">
+              Unggah gambar barang bekas untuk melihat hasil deteksi.
+            </p>
+            <p className="text-muted small">
+              AI kami akan mendeteksi objek dan menyarankan kerajinan yang dapat dibuat.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -214,37 +265,64 @@ function DetectionResults({ objects, isLoading }) {
     }))
     .sort((a, b) => b.score - a.score);
 
+  // Hitung total objek unik
+  const uniqueObjectCount = sortedObjects.length;
+  
+  // Tentukan apakah kita menemukan multi-object (2 atau lebih)
+  const isMultiObject = uniqueObjectCount >= 2;
+
   return (
     <div className="card mb-4">
       <div className="card-header bg-info text-white">
-        <h5 className="mb-0">Hasil Deteksi</h5>
+        <h5 className="mb-0 d-flex align-items-center">
+          <i className="bi bi-search me-2"></i>
+          Hasil Deteksi
+          {isMultiObject && (
+            <span className="badge bg-warning ms-2">
+              {uniqueObjectCount} objek
+            </span>
+          )}
+        </h5>
       </div>
       <div className="card-body">
-        <p>Kami telah mendeteksi objek berikut dalam gambar Anda:</p>
-        <ul className="list-group">
-          {sortedObjects.map((object, index) => (
-            <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <i className="bi bi-check-circle-fill text-success me-2"></i>
-                <span className="fw-bold">{object.translation}</span>
-                {object.count > 1 && <span className="badge bg-secondary rounded-pill ms-2">x{object.count}</span>}
-                <br />
-                <small className="text-muted">
-                  Kategori kerajinan: <span className="badge bg-light text-dark">{object.craftCategory}</span>
-                </small>
-              </div>
-              <span className="badge bg-primary rounded-pill">
-                {Math.round(object.score * 100)}% keyakinan
-              </span>
-            </li>
-          ))}
-        </ul>
+        <p>
+          <i className="bi bi-info-circle-fill text-info me-2"></i>
+          Kami telah mendeteksi objek berikut dalam gambar Anda:
+        </p>
         
-        <div className="alert alert-success mt-3" role="alert">
-          <i className="bi bi-lightbulb-fill me-2"></i>
+        <div className="detection-list mb-4">
+          {sortedObjects.map((object, index) => (
+            <div key={index} className="detection-item">
+              <div className={`detection-item-icon bg-light-${getConfidenceColor(object.score)}`}>
+                <i className={`bi ${getCategoryIcon(object.craftCategory)}`}></i>
+              </div>
+              <div className="detection-item-content">
+                <div className="fw-bold">{object.translation}</div>
+                <div className="small text-muted">
+                  Kategori: {object.craftCategory}
+                  {object.count > 1 && <span className="ms-2 badge bg-secondary">x{object.count}</span>}
+                </div>
+              </div>
+              <div className={`detection-item-confidence badge bg-${getConfidenceColor(object.score)}`}>
+                {Math.round(object.score * 100)}%
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className={`alert ${isMultiObject ? 'alert-warning' : 'alert-success'} mt-3 mb-0`}>
+          <i className={`bi ${isMultiObject ? 'bi-lightbulb-fill' : 'bi-check-circle-fill'} me-2`}></i>
           <small>
-            Hasil deteksi di atas akan digunakan untuk menyarankan kerajinan yang bisa Anda buat. 
-            Semakin tinggi persentase keyakinan, semakin akurat saran kerajinan kami.
+            {isMultiObject ? (
+              <>
+                <strong>Kombinasi Objek Terdeteksi!</strong> Kami akan menyarankan kerajinan yang bisa dibuat dari kombinasi {uniqueObjectCount} objek yang terdeteksi.
+              </>
+            ) : (
+              <>
+                Hasil deteksi akan digunakan untuk menyarankan kerajinan yang bisa Anda buat. 
+                Semakin tinggi persentase keyakinan, semakin akurat saran kerajinan kami.
+              </>
+            )}
           </small>
         </div>
       </div>
