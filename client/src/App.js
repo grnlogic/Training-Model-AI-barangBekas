@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import { Button } from "react-bootstrap"; // Add Button import
+import { Button } from "react-bootstrap";
 import Header from "./components/Header";
 import ImageUpload from "./components/ImageUpload";
 import DetectionResults from "./components/DetectionResults";
 import CraftSuggestion from "./components/CraftSuggestion";
 import Footer from "./components/Footer";
-import Swal from "sweetalert2"; // Import SweetAlert
+import Swal from "sweetalert2";
 import ApiTester from "./components/ApiTester";
+import HomePage from "./pages/HomePage";
+import ScanPage from "./pages/ScanPage";
+import AboutPage from "./pages/AboutPage";
+import CategorySection from "./components/CategorySection";
+import RecentProjects from "./components/RecentProjects";
+import PopularTutorials from "./components/PopularTutorials";
+import MarketplaceSection from "./components/MarketplaceSection";
+import CommunitySection from "./components/CommunitySection";
 
 // Add a debounce function to prevent excessive API calls
 function debounce(func, wait) {
@@ -129,33 +138,63 @@ function App() {
         throw new Error(errorMessage);
       }
 
-      // Jika berhasil dan ada suggestion
+      // Jika berhasil dan ada suggestion, tampilkan dalam popup
       if (data.suggestion) {
-        // Set craft suggestion dengan data dari AI
         setCraftSuggestion({
           ...data.suggestion,
-          // Tambahkan informasi sumber data
           source: data.suggestion.isAI ? "ai" : "database",
-          // Simpan jawaban mentah dari AI jika ada
           rawAIResponse: data.fullAIResponse || null,
-          // Simpan informasi material terdeteksi
           detectedMaterials: data.materials || [],
-          // Simpan sumber AI (jika ada)
           aiSource: data.suggestion.aiSource || "openai",
         });
 
-        // Tampilkan SweetAlert sukses (tanpa kondisi untuk fallback)
+        // Display the craft suggestion in a popup
         Swal.fire({
-          icon: "success",
-          title: "Rekomendasi AI Berhasil!",
-          html: `Rekomendasi kerajinan berhasil dibuat menggunakan <b>${
-            data.suggestion.aiSource
-              ? `${data.suggestion.aiSource.toUpperCase()}`
-              : "AI"
-          }</b>`,
-          timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
+          title: "Rekomendasi Kerajinan",
+          html: `
+            <div class="text-start">
+              <h4>${data.suggestion.nama}</h4>
+              <div class="alert alert-primary mb-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Kerajinan ini dibuat dari:</strong>
+                <span class="ms-1">${
+                  data.suggestion.bahan && data.suggestion.bahan.length > 0
+                    ? data.suggestion.bahan.slice(0, 3).join(", ")
+                    : "Barang bekas yang terdeteksi"
+                }</span>
+              </div>
+              <h5><i class="bi bi-list-ol me-2"></i>Langkah Pembuatan:</h5>
+              <ol class="text-start">
+                ${
+                  data.suggestion.langkah
+                    ? data.suggestion.langkah
+                        .map((step) => `<li>${step}</li>`)
+                        .join("")
+                    : "<li>Panduan langkah tidak tersedia</li>"
+                }
+              </ol>
+            </div>
+          `,
+          imageUrl:
+            data.suggestion.image ||
+            "https://dummyimage.com/400x300/cccccc/ffffff&text=Contoh+Kerajinan",
+          imageAlt: data.suggestion.nama,
+          imageWidth: 400,
+          imageHeight: 300,
+          showCloseButton: true,
+          showCancelButton: true,
+          confirmButtonText: "Lihat Detail",
+          cancelButtonText: "Tutup",
+          confirmButtonColor: "#27ae60",
+          width: "800px",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Scroll to craft suggestion component for details
+            const element = document.getElementById("craft-suggestion-top");
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }
         });
       } else {
         throw new Error("Tidak ada rekomendasi kerajinan dari AI");
@@ -218,153 +257,154 @@ function App() {
   };
 
   return (
-    <div className="App d-flex flex-column min-vh-100">
-      <Header />
+    <Router>
+      <div className="App d-flex flex-column min-vh-100">
+        <Header />
 
-      <main className="flex-grow-1">
-        <div className="container py-4">
-          {/* Add button to toggle API tester */}
-          <div className="text-end mb-3">
-            <Button
-              variant={showApiTester ? "secondary" : "info"}
-              size="sm"
-              onClick={() => setShowApiTester(!showApiTester)}
-            >
-              {showApiTester ? "Sembunyikan Penguji API" : "Penguji API"}
-            </Button>
-          </div>
+        <main className="flex-grow-1">
+          <div className="container py-4">
+            {/* API Tester toggler (only if needed) */}
+            {showApiTester && <ApiTester />}
 
-          {/* Show API tester when button is clicked */}
-          {showApiTester && <ApiTester />}
-
-          {showIntro && (
-            <div className="row mb-5">
-              <div className="col-lg-8 mx-auto text-center">
-                <h2 className="mb-4">Selamat Datang di BarbekRaft</h2>
-                <p className="lead mb-4">
-                  Aplikasi cerdas untuk mengubah barang bekas menjadi kerajinan
-                  bermanfaat menggunakan kekuatan AI.
-                </p>
-                <div className="row mt-5">
-                  <div className="col-md-4 mb-4">
-                    <div className="intro-card">
-                      <div className="card-body">
-                        <i
-                          className="bi bi-camera-fill text-primary"
-                          style={{ fontSize: "2.5rem" }}
-                        ></i>
-                        <h5 className="mt-3">Ambil Foto</h5>
-                        <p className="text-muted">
-                          Ambil foto barang bekas yang Anda miliki
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-4 mb-4">
-                    <div className="intro-card">
-                      <div className="card-body">
-                        <i
-                          className="bi bi-search text-info"
-                          style={{ fontSize: "2.5rem" }}
-                        ></i>
-                        <h5 className="mt-3">AI Mendeteksi</h5>
-                        <p className="text-muted">
-                          AI kami mendeteksi objek dalam gambar
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-4 mb-4">
-                    <div className="intro-card">
-                      <div className="card-body">
-                        <i
-                          className="bi bi-lightbulb-fill text-warning"
-                          style={{ fontSize: "2.5rem" }}
-                        ></i>
-                        <h5 className="mt-3">Dapatkan Ide</h5>
-                        <p className="text-muted">
-                          Dapatkan saran kerajinan yang bisa dibuat
-                        </p>
-                      </div>
-                    </div>
+            {/* Hero Section with improved layout */}
+            <div className="hero-wrapper">
+              <div className="row align-items-center hero-section">
+                <div className="col-lg-6">
+                  <div className="hero-content">
+                    <h1 className="hero-title">
+                      Ubah Barang Bekas Menjadi Karya Kreatif dengan AI
+                    </h1>
+                    <p className="hero-subtitle">
+                      Upload foto barang bekas Anda dan dapatkan rekomendasi ide
+                      kerajinan secara instan dari AI kami.
+                    </p>
                   </div>
                 </div>
-                <div className="alert alert-primary mt-3">
-                  <i className="bi bi-info-circle-fill me-2"></i>
-                  Mulai dengan mengunggah foto barang bekas seperti botol
-                  plastik, kardus, kaleng, atau kain bekas.
+                <div className="col-lg-6 text-center">
+                  <img
+                    src="/images/recycle-illustration.png"
+                    alt="Recycle Illustration"
+                    className="img-fluid hero-image"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://dummyimage.com/600x400/eee/27ae60&text=Daur+Ulang+Kreatif";
+                    }}
+                  />
                 </div>
               </div>
             </div>
-          )}
 
-          {error && (
-            <div
-              className="alert alert-danger alert-dismissible fade show"
-              role="alert"
-            >
-              <i className="bi bi-exclamation-triangle-fill me-2"></i>
-              {error}
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setError(null)}
-                aria-label="Close"
-              ></button>
-            </div>
-          )}
-
-          <div className="row g-4">
-            <div className={uploadedImage ? "col-lg-5" : "col-lg-6 mx-auto"}>
-              <ImageUpload
-                onObjectsDetected={handleObjectsDetected}
-                setUploadedImage={setUploadedImage}
-              />
-
-              {detectedObjects.length > 0 && (
-                <DetectionResults
-                  objects={detectedObjects}
-                  isLoading={isLoading}
-                />
-              )}
-            </div>
-
-            {uploadedImage && (
-              <div className="col-lg-7">
-                <div className="card mb-4">
-                  <div className="card-header bg-primary text-white">
-                    <h5 className="mb-0">
-                      <i className="bi bi-image me-2"></i>
-                      Gambar yang Diproses
-                    </h5>
-                  </div>
-                  <div className="card-body text-center">
-                    <div className="uploaded-image-container">
-                      <img
-                        src={uploadedImage}
-                        alt="Gambar yang diunggah"
-                        className="img-fluid rounded"
+            {/* Upload and Results Section - Better organized */}
+            <div className="upload-results-section">
+              <div className="row g-4">
+                {/* Upload Section */}
+                <div className="col-lg-6">
+                  <div className="card upload-card">
+                    <div className="card-header bg-primary text-white">
+                      <h5 className="mb-0">
+                        <i className="bi bi-cloud-upload me-2"></i>
+                        Upload Foto Barang Bekas
+                      </h5>
+                    </div>
+                    <div className="card-body">
+                      <ImageUpload
+                        onObjectsDetected={handleObjectsDetected}
+                        setUploadedImage={setUploadedImage}
                       />
                     </div>
                   </div>
                 </div>
 
-                {craftSuggestion && (
+                {/* Processed Image & Detection Results */}
+                <div className="col-lg-6">
+                  {uploadedImage ? (
+                    <div className="results-wrapper">
+                      <div className="card mb-4">
+                        <div className="card-header bg-primary text-white">
+                          <h5 className="mb-0">
+                            <i className="bi bi-image me-2"></i>
+                            Gambar yang Diproses
+                          </h5>
+                        </div>
+                        <div className="card-body text-center">
+                          <div className="uploaded-image-container">
+                            <img
+                              src={uploadedImage}
+                              alt="Gambar yang diunggah"
+                              className="img-fluid rounded"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {detectedObjects.length > 0 && (
+                        <DetectionResults
+                          detectedObjects={detectedObjects}
+                          isLoading={isLoading}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="card upload-instruction-card h-100">
+                      <div className="card-body text-center d-flex flex-column justify-content-center">
+                        <i className="bi bi-arrow-left-circle display-1 text-muted mb-3"></i>
+                        <h5>Unggah Foto di Sebelah Kiri</h5>
+                        <p className="text-muted">
+                          Hasil deteksi dan rekomendasi akan muncul di sini
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Craft Suggestion - if available */}
+            {craftSuggestion && (
+              <div className="row mt-4">
+                <div className="col-12">
                   <CraftSuggestion
                     suggestion={craftSuggestion}
                     isLoading={isLoading}
                     detectedObjects={detectedObjects}
                     onSelectAlternative={handleSelectAlternative}
                   />
-                )}
+                </div>
               </div>
             )}
-          </div>
-        </div>
-      </main>
 
-      <Footer />
-    </div>
+            {/* Section Divider */}
+            <div className="section-divider my-5"></div>
+
+            {/* Category Section */}
+            <CategorySection />
+
+            {/* Section Divider */}
+            <div className="section-divider my-5"></div>
+
+            {/* Recent Projects Section */}
+            <RecentProjects />
+
+            {/* Section Divider */}
+            <div className="section-divider my-5"></div>
+
+            {/* Popular Tutorials */}
+            <PopularTutorials />
+
+            {/* Section Divider */}
+            <div className="section-divider my-5"></div>
+
+            {/* Marketplace Section */}
+            <MarketplaceSection />
+
+            {/* Community Section */}
+            <CommunitySection />
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    </Router>
   );
 }
 

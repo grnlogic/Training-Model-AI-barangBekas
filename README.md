@@ -4,7 +4,12 @@
 
 BarbekRaft adalah aplikasi inovatif yang menggunakan kecerdasan buatan untuk mendeteksi objek dalam gambar dan memberikan rekomendasi kerajinan dari barang bekas. Aplikasi ini bertujuan untuk mendorong daur ulang kreatif dan mengurangi limbah dengan memberikan ide-ide kerajinan yang dapat dibuat dari barang-barang rumah tangga yang sudah tidak terpakai.
 
-> **Proyek ini dilanjutkan dan dikembangkan dari repositori [https://github.com/tryaannn](https://github.com/tryaannn)**
+## Pengembangan
+
+> **Proyek ini dikembangkan dengan kontribusi dari:**
+>
+> - [https://github.com/tryaannn](https://github.com/tryaannn) - Pengembangan logika scanning image
+> - [https://github.com/grnlogic](https://github.com/grnlogic) - Pengembangan dan integrasi AI
 
 ## Fitur Utama
 

@@ -178,7 +178,7 @@ router.post("/suggest", async (req, res) => {
 });
 
 // API untuk menghasilkan gambar dari prompt kerajinan
-router.post("/generate-image", (req, res) => {
+router.post("/generate-image", async (req, res) => {
   try {
     const { prompt } = req.body;
 
@@ -189,34 +189,77 @@ router.post("/generate-image", (req, res) => {
       });
     }
 
-    // Untuk implementasi produksi, Anda bisa menggunakan layanan AI seperti:
-    // 1. OpenAI DALL-E API,
-    // 2. Stable Diffusion API
-    // 3. Midjourney API,
-    // 4. dll
+    // Extract keywords for Pinterest search
+    const keywords = prompt.split(" ").slice(0, 3).join(" ");
+    console.log("Searching Pinterest for:", keywords);
 
-    // Enhanced prompt untuk hasil yang lebih baik
-    const enhancedPrompt = `${prompt}, high quality, detailed, vibrant colors, natural lighting, sustainable, upcycled, eco-friendly`;
+    // Use LOLHuman API to search Pinterest
+    const pinterestApiUrl = `https://api.lolhuman.xyz/api/pinterest?apikey=10dbd7bdb109b10b4f67ad1f&query=${encodeURIComponent(
+      keywords
+    )}`;
 
-    // Enkode prompt untuk URL
-    const encodedPrompt = encodeURIComponent(enhancedPrompt);
+    console.log("Using Pinterest API URL:", pinterestApiUrl);
 
-    // Untuk demo, kita gunakan Unsplash API dengan keyword dari prompt umum
-    const keywords = extractKeywords(prompt);
-    const imageUrl = `https://source.unsplash.com/featured/?${encodedPrompt}`;
-
-    // Return URL gambar
-    return res.json({
-      success: true,
-      imageUrl: imageUrl,
-      prompt: enhancedPrompt,
+    const pinterestResponse = await axios.get(pinterestApiUrl, {
+      timeout: 10000, // 10 second timeout
     });
+
+    if (
+      pinterestResponse.data &&
+      pinterestResponse.data.status === 200 &&
+      pinterestResponse.data.result
+    ) {
+      // Get up to 5 images from the result
+      const images = Array.isArray(pinterestResponse.data.result)
+        ? pinterestResponse.data.result.slice(0, 5)
+        : [pinterestResponse.data.result];
+
+      console.log(`Found ${images.length} Pinterest images`);
+
+      return res.json({
+        success: true,
+        imageUrl: images[0], // Return the first image as primary
+        additionalImages: images.slice(1), // Additional images if any
+        source: "pinterest",
+        prompt: keywords,
+      });
+    } else {
+      console.log(
+        "Pinterest API returned no results, falling back to Unsplash"
+      );
+
+      // Fallback to Unsplash if Pinterest returns no results
+      const enhancedPrompt = `${prompt}, high quality, detailed, vibrant colors, natural lighting, sustainable, upcycled, eco-friendly`;
+      const encodedPrompt = encodeURIComponent(enhancedPrompt);
+      const imageUrl = `https://source.unsplash.com/featured/?${encodedPrompt}`;
+
+      return res.json({
+        success: true,
+        imageUrl: imageUrl,
+        source: "unsplash",
+        prompt: enhancedPrompt,
+      });
+    }
   } catch (error) {
     console.error("Error dalam API generate-image:", error);
-    res.status(500).json({
-      success: false,
-      message: "Terjadi kesalahan saat menghasilkan gambar",
-    });
+
+    // Fallback to Unsplash on API error
+    try {
+      const fallbackPrompt = encodeURIComponent("diy craft recycled materials");
+      const fallbackImageUrl = `https://source.unsplash.com/featured/?${fallbackPrompt}`;
+
+      return res.json({
+        success: true,
+        imageUrl: fallbackImageUrl,
+        source: "fallback",
+        error: error.message,
+      });
+    } catch (fallbackError) {
+      return res.status(500).json({
+        success: false,
+        message: "Terjadi kesalahan saat menghasilkan gambar",
+      });
+    }
   }
 });
 

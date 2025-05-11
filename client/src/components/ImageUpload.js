@@ -35,7 +35,7 @@ function ImageUpload({ onObjectsDetected, setUploadedImage }) {
     };
   }, [modelOptions.modelType]);
 
-  // Fungsi untuk memuat model dengan progress
+  // Load model function (unchanged)
   const loadModel = async () => {
     try {
       setIsModelLoading(true);
@@ -114,7 +114,7 @@ function ImageUpload({ onObjectsDetected, setUploadedImage }) {
     });
   };
 
-  // Fungsi untuk memproses file gambar
+  // Process image function (unchanged)
   const processImage = async (file) => {
     if (!file) return;
 
@@ -349,7 +349,7 @@ function ImageUpload({ onObjectsDetected, setUploadedImage }) {
     }, "image/jpeg");
   };
 
-  // Fungsi untuk mendapatkan warna acak
+  // Get random color function (unchanged)
   const getRandomColor = () => {
     const colors = [
       "#FF5733",
@@ -367,44 +367,35 @@ function ImageUpload({ onObjectsDetected, setUploadedImage }) {
   };
 
   return (
-    <div className="card">
-      <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">
-          <i className="bi bi-cloud-upload me-2"></i>
-          Unggah Gambar Barang Bekas
-        </h5>
-      </div>
-      <div className="card-body">
-        {!cameraActive ? (
-          <>
-            <p className="card-text">
-              Ambil foto barang-barang bekas yang Anda miliki dan kami akan
-              menyarankan kerajinan yang bisa Anda buat.
-            </p>
+    <div className="upload-container">
+      {!cameraActive ? (
+        <>
+          {/* Upload Area with improved sizing */}
+          <div
+            className={`upload-area text-center p-4 rounded ${
+              dragActive ? "upload-area-active" : ""
+            }`}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
+          >
+            <div className="d-flex flex-column align-items-center">
+              <div className="upload-icon mb-3">
+                <i className="bi bi-cloud-upload text-primary"></i>
+              </div>
+              <p className="mb-1 upload-title">
+                <strong>Tarik & letakkan foto di sini</strong>
+              </p>
+              <p className="text-muted small mb-3">atau klik untuk unggah</p>
 
-            {/* Drag & Drop area */}
-            <div
-              className={`upload-area text-center p-4 mb-3 rounded border ${
-                dragActive ? "border-primary bg-light" : "border-dashed"
-              }`}
-              onDragEnter={handleDrag}
-              onDragOver={handleDrag}
-              onDragLeave={handleDrag}
-              onDrop={handleDrop}
-              style={{ cursor: "pointer" }}
-              onClick={handleBrowseClick}
-            >
-              <i
-                className="bi bi-cloud-upload text-primary"
-                style={{ fontSize: "3rem" }}
-              ></i>
-              <p className="mt-3 mb-0">
-                <strong>Tarik & letakkan gambar di sini</strong> atau{" "}
-                <span className="text-primary">klik untuk memilih</span>
-              </p>
-              <p className="text-muted small mb-0">
-                Mendukung format JPG, PNG, WEBP
-              </p>
+              <button
+                className="btn btn-primary"
+                onClick={handleBrowseClick}
+                disabled={isModelLoading || isDetecting}
+              >
+                <i className="bi bi-file-earmark me-1"></i> Pilih File
+              </button>
 
               <input
                 type="file"
@@ -415,166 +406,89 @@ function ImageUpload({ onObjectsDetected, setUploadedImage }) {
                 disabled={isModelLoading || isDetecting}
               />
             </div>
+          </div>
 
-            <div className="d-flex justify-content-between mb-4">
-              <button
-                className="btn btn-outline-primary"
-                onClick={toggleCamera}
-                disabled={isModelLoading || isDetecting}
-              >
-                <i className="bi bi-camera me-1"></i> Gunakan Kamera
+          {/* Camera button in better position */}
+          <div className="text-center mt-3">
+            <button
+              className="btn btn-outline-primary"
+              onClick={toggleCamera}
+              disabled={isModelLoading || isDetecting}
+            >
+              <i className="bi bi-camera me-1"></i> Gunakan Kamera
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="camera-container text-center">
+          <div className="position-relative d-inline-block">
+            <video
+              ref={videoRef}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "350px",
+                borderRadius: "8px",
+              }}
+              autoPlay
+              playsInline
+            ></video>
+            <div className="camera-controls mt-3 d-flex justify-content-center">
+              <button className="btn btn-danger me-2" onClick={toggleCamera}>
+                <i className="bi bi-x-circle me-1"></i> Batalkan
               </button>
-
-              <div className="d-flex align-items-center">
-                <i className="bi bi-gear-fill text-secondary me-2"></i>
-                <div className="dropdown">
-                  <button
-                    className="btn btn-sm btn-outline-secondary dropdown-toggle"
-                    type="button"
-                    id="modelDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Pengaturan AI
-                  </button>
-                  <div className="dropdown-menu p-3" style={{ width: "250px" }}>
-                    <div className="mb-3">
-                      <label className="form-label">Jenis Model AI:</label>
-                      <select
-                        className="form-select form-select-sm"
-                        value={modelOptions.modelType}
-                        onChange={handleModelTypeChange}
-                        disabled={isModelLoading || isDetecting}
-                      >
-                        <option value="lite_mobilenet_v2">
-                          Ringan (Lebih Cepat)
-                        </option>
-                        <option value="mobilenet_v2">
-                          Standar (Lebih Akurat)
-                        </option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="form-label d-flex justify-content-between">
-                        <span>Tingkat Kepercayaan:</span>
-                        <span className="badge bg-primary">
-                          {Math.round(modelOptions.confidence * 100)}%
-                        </span>
-                      </label>
-                      <input
-                        type="range"
-                        className="form-range"
-                        min="0.1"
-                        max="0.9"
-                        step="0.1"
-                        value={modelOptions.confidence}
-                        onChange={handleConfidenceChange}
-                        disabled={isDetecting}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="camera-container text-center">
-            <div className="position-relative d-inline-block">
-              <video
-                ref={videoRef}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "350px",
-                  borderRadius: "8px",
-                }}
-                autoPlay
-                playsInline
-              ></video>
-              <div className="camera-controls mt-3 d-flex justify-content-center">
-                <button className="btn btn-danger me-2" onClick={toggleCamera}>
-                  <i className="bi bi-x-circle me-1"></i> Batalkan
-                </button>
-                <button className="btn btn-success" onClick={captureImage}>
-                  <i className="bi bi-camera me-1"></i> Ambil Foto
-                </button>
-              </div>
+              <button className="btn btn-success" onClick={captureImage}>
+                <i className="bi bi-camera me-1"></i> Ambil Foto
+              </button>
             </div>
           </div>
-        )}
-
-        {errorMessage && (
-          <div className="alert alert-danger" role="alert">
-            <i className="bi bi-exclamation-triangle-fill me-2"></i>
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Upload & detection progress */}
-        {(uploadProgress > 0 || isDetecting) && (
-          <div className="mt-3">
-            <div className="d-flex justify-content-between">
-              <small>
-                {isDetecting ? "Mendeteksi objek..." : "Mengunggah gambar..."}
-              </small>
-              <small>{uploadProgress > 0 ? `${uploadProgress}%` : ""}</small>
-            </div>
-            <div className="progress">
-              <div
-                className="progress-bar progress-bar-striped progress-bar-animated"
-                style={{
-                  width: `${uploadProgress > 0 ? uploadProgress : 80}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Model loading progress */}
-        {isModelLoading && (
-          <div className="mt-3">
-            <div className="d-flex justify-content-between">
-              <small>Memuat model AI...</small>
-              <small>{loadProgress}%</small>
-            </div>
-            <div className="progress">
-              <div
-                className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                style={{ width: `${loadProgress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Image preview */}
-        {imagePreview && !isDetecting && (
-          <div className="image-preview mt-3 text-center">
-            <p className="text-muted small">Preview Gambar (Sebelum Deteksi)</p>
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="img-fluid rounded shadow-sm mb-3"
-              style={{ maxHeight: "200px" }}
-            />
-          </div>
-        )}
-
-        <div className="alert alert-info mt-3" role="alert">
-          <strong>Tips untuk deteksi yang lebih akurat:</strong>
-          <ul className="mb-0 mt-1">
-            <li>Pastikan objek terlihat jelas dan tidak tertutup</li>
-            <li>Atur pencahayaan yang baik agar objek terlihat jelas</li>
-            <li>
-              Ambil foto beberapa objek sekaligus untuk kerajinan kombinasi
-            </li>
-            <li>
-              Coba ambil gambar dari berbagai sudut jika deteksi tidak akurat
-            </li>
-          </ul>
         </div>
+      )}
 
-        {/* Canvas tersembunyi untuk anotasi gambar */}
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-      </div>
+      {errorMessage && (
+        <div className="alert alert-danger mt-3" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Upload & detection progress */}
+      {(uploadProgress > 0 || isDetecting) && (
+        <div className="mt-3">
+          <div className="d-flex justify-content-between">
+            <small>
+              {isDetecting ? "Mendeteksi objek..." : "Mengunggah gambar..."}
+            </small>
+            <small>{uploadProgress > 0 ? `${uploadProgress}%` : ""}</small>
+          </div>
+          <div className="progress">
+            <div
+              className="progress-bar progress-bar-striped progress-bar-animated"
+              style={{
+                width: `${uploadProgress > 0 ? uploadProgress : 80}%`,
+              }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Model loading progress */}
+      {isModelLoading && (
+        <div className="mt-3">
+          <div className="d-flex justify-content-between">
+            <small>Memuat model AI...</small>
+            <small>{loadProgress}%</small>
+          </div>
+          <div className="progress">
+            <div
+              className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+              style={{ width: `${loadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* Canvas tersembunyi untuk anotasi gambar */}
+      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 }

@@ -18,6 +18,8 @@ function CraftSuggestion({
   const [craftImage, setCraftImage] = useState(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageSource, setImageSource] = useState("unsplash");
+  const [additionalImages, setAdditionalImages] = useState([]);
 
   // Set the active suggestion initially
   useEffect(() => {
@@ -252,6 +254,20 @@ function CraftSuggestion({
       setIsImageLoading(true);
       setImageError(false);
 
+      console.log("Fetching Pinterest images for:", prompt);
+
+      // Tampilkan SweetAlert loading khusus Pinterest
+      Swal.fire({
+        title: "Mencari Inspirasi...",
+        html: "Mengambil gambar kerajinan dari Pinterest",
+        timerProgressBar: true,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+
       const response = await fetch("/api/generate-image", {
         method: "POST",
         headers: {
@@ -266,8 +282,19 @@ function CraftSuggestion({
 
       const data = await response.json();
 
+      // Tutup SweetAlert loading
+      Swal.close();
+
       if (data.success && data.imageUrl) {
         setCraftImage(data.imageUrl);
+
+        // Jika ada gambar tambahan dari Pinterest, simpan juga
+        if (data.additionalImages && data.additionalImages.length > 0) {
+          setAdditionalImages(data.additionalImages);
+        }
+
+        // Tampilkan badge sumber gambar
+        setImageSource(data.source || "unsplash");
       } else {
         setImageError(true);
       }
@@ -277,6 +304,9 @@ function CraftSuggestion({
       console.error("Error generating craft image:", error);
       setImageError(true);
       setIsImageLoading(false);
+
+      // Tutup SweetAlert loading pada error
+      Swal.close();
     }
   };
 
@@ -435,10 +465,13 @@ function CraftSuggestion({
             <div className="craft-image-container mb-3">
               {isImageLoading ? (
                 <div className="text-center p-5">
-                  <div className="spinner-border text-primary" role="status">
+                  <div
+                    className="spinner-border text-primary pulse-animation"
+                    role="status"
+                  >
                     <span className="visually-hidden">Loading...</span>
                   </div>
-                  <p className="mt-2 mb-0">Menghasilkan visualisasi...</p>
+                  <p className="mt-2 mb-0">Mencari inspirasi di Pinterest...</p>
                 </div>
               ) : imageError ? (
                 <div className="text-center py-5 bg-light rounded">
@@ -466,22 +499,56 @@ function CraftSuggestion({
                 />
               )}
 
-              {suggestion.source === "ai" ? (
+              {!isImageLoading && (
                 <div className="mt-2 text-center">
                   <span className="badge bg-light text-dark">
-                    <i className="bi bi-stars me-1"></i>
-                    Visualisasi dihasilkan oleh AI
-                  </span>
-                </div>
-              ) : (
-                <div className="mt-2 text-center">
-                  <span className="badge bg-light text-dark">
-                    <i className="bi bi-image me-1"></i>
-                    Visualisasi indikatif
+                    {imageSource === "pinterest" ? (
+                      <>
+                        <i className="bi bi-pinterest me-1"></i>
+                        Inspirasi dari Pinterest
+                      </>
+                    ) : imageSource === "unsplash" ? (
+                      <>
+                        <i className="bi bi-image me-1"></i>
+                        Visualisasi dari Unsplash
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-image me-1"></i>
+                        Visualisasi indikatif
+                      </>
+                    )}
                   </span>
                 </div>
               )}
             </div>
+
+            {/* Display additional images if available */}
+            {additionalImages.length > 0 && (
+              <div className="additional-images mt-2">
+                <p className="small text-muted mb-2">Inspirasi tambahan:</p>
+                <div className="d-flex flex-wrap gap-1 justify-content-center">
+                  {additionalImages.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Inspirasi ${idx + 1}`}
+                      className="img-thumbnail"
+                      style={{
+                        width: "60px",
+                        height: "60px",
+                        objectFit: "cover",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setCraftImage(img)}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

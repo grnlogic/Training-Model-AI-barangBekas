@@ -182,7 +182,7 @@ class GeminiService {
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: parseInt(
-              process.env.GEMINI_MAX_TOKENS || "300",
+              process.env.GEMINI_MAX_TOKENS || "600", // Increased default token limit to 600
               10
             ),
           },
@@ -210,21 +210,24 @@ class GeminiService {
 
         // Parse response from Gemini
         const responseText = response.data.candidates[0].content.parts[0].text;
+
+        // Add detailed logging for debugging
         console.log(
-          "Respons mentah dari Gemini:",
-          responseText.substring(0, 100) + "..."
+          "Respon Gemini mentah:",
+          JSON.stringify(responseText, null, 2)
         );
 
         // Try to extract JSON from the text response
         let jsonResponse = {};
         try {
-          // Look for JSON pattern in the response
-          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          // Remove code block markers if present
+          const cleanText = responseText.replace(/```json|```/g, "");
+          const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             jsonResponse = JSON.parse(jsonMatch[0]);
           } else {
             // If no JSON found, convert the text response to our required JSON format
-            jsonResponse = this.convertTextToJson(responseText);
+            jsonResponse = this.convertTextToJson(cleanText);
           }
 
           // Validate required fields exist
