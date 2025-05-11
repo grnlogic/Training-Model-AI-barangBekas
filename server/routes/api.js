@@ -1,283 +1,221 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const craftDatabase = require('../models/craftDatabase');
-const craftDatabaseMulti = require('../models/craftDatabaseMulti');
+const axios = require("axios");
+const objectMapping = require("../utils/objectMapping");
+const mlService = require("../services/mlService");
+const deepseekService = require("../services/deepseekService");
+const geminiService = require("../services/geminiService");
 
-// Route untuk mendapatkan database kerajinan
-router.get('/crafts', (req, res) => {
-  res.json(craftDatabase);
+// Add route logging middleware
+router.use((req, res, next) => {
+  console.log(`API Route accessed: ${req.method} ${req.originalUrl}`);
+  next();
 });
 
-// Route untuk mendapatkan database kerajinan multi-objek
-router.get('/crafts-multi', (req, res) => {
-  res.json(craftDatabaseMulti);
-});
+// Create a local fallback generator for when API is unavailable
+const getLocalFallback = (objects) => {
+  // Simple fallback based on detected objects
+  const primaryObject = objects[0]?.class || "unknown";
 
-// Pemetaan objek COCO-SSD ke kategori kerajinan
-const objectMapping = {
-  // Botol dan wadah
-  'bottle': 'botol',
-  'wine glass': 'botol',
-  'cup': 'kaleng',
-  'bowl': 'kaleng',
-  'vase': 'botol',
-  
-  // Kardus dan kotak
-  'box': 'kardus',
-  'suitcase': 'kardus',
-  'handbag': 'kardus',
-  'backpack': 'kardus',
-  
-  // Kertas dan buku
-  'book': 'koran',
-  'newspaper': 'koran',
-  'paper': 'koran',
-  
-  // Kain dan pakaian
-  'tie': 'kain',
-  'handbag': 'kain',
-  'backpack': 'kain',
-  'umbrella': 'kain',
-  'suitcase': 'kain',
-  'shirt': 'kain',
-  'dress': 'kain',
-  'pants': 'kain',
-  'scarf': 'kain',
-  'glove': 'kain',
-  'skirt': 'kain',
-  'hat': 'kain',
-  'sock': 'kain',
-  
-  // Elektronik
-  'cell phone': 'elektronik',
-  'tv': 'elektronik',
-  'laptop': 'elektronik',
-  'remote': 'elektronik',
-  'keyboard': 'elektronik',
-  'mouse': 'elektronik',
-  'microwave': 'elektronik',
-  'oven': 'elektronik',
-  'toaster': 'elektronik',
-  'refrigerator': 'elektronik',
-  
-  // Ban dan roda
-  'tire': 'ban',
-  'wheel': 'ban',
-  'bicycle': 'ban',
-  'motorcycle': 'ban',
-  
-  // Kayu
-  'bench': 'kayu',
-  'chair': 'kayu',
-  'dining table': 'kayu',
-  'wooden spoon': 'kayu',
-  'stick': 'kayu',
-  
-  // CD/DVD
-  'cd': 'cd',
-  'dvd': 'cd',
-  'frisbee': 'cd',
-  
-  // Tutup botol (tidak ada kategori langsung di COCO-SSD, jadi ini perkiraan)
-  'cap': 'tutup-botol',
-  'bottle cap': 'tutup-botol',
-  
-  // Sendok/garpu
-  'spoon': 'sendok-garpu',
-  'fork': 'sendok-garpu',
-  'knife': 'sendok-garpu',
-  'chopsticks': 'sendok-garpu',
-  
-  // Sedotan (tidak ada kategori langsung di COCO-SSD, jadi ini perkiraan)
-  'straw': 'sedotan',
-  
-  // Tambahan item umum rumah tangga
-  'scissors': 'sendok-garpu',
-  'hairbrush': 'sisir',
-  'comb': 'sisir',
-  'toys': 'mainan',
-  'toy': 'mainan',
-  'spatula': 'spatula',
-  'umbrella': 'payung',
-  'pillow': 'kain',
-  'towel': 'kain',
-  'blanket': 'kain',
-  'curtain': 'kain'
+  // Basic template for bottle fallback
+  if (primaryObject === "bottle") {
+    return {
+      nama: "Vas Bunga dari Botol Plastik",
+      bahan: ["Botol plastik bekas", "Cat akrilik", "Gunting", "Tali rami"],
+      langkah: [
+        "Potong botol plastik menjadi dua bagian, gunakan bagian bawah sebagai vas",
+        "Bersihkan botol dari label dan kotoran",
+        "Cat bagian luar botol sesuai selera",
+        "Tambahkan hiasan dengan tali rami di bagian leher botol",
+        "Isi dengan air dan tambahkan bunga",
+      ],
+      tingkatKesulitan: "Mudah",
+      kategori: "Dekorasi Rumah",
+      estimasiWaktu: "30 menit",
+      imagePrompt:
+        "Vas bunga cantik terbuat dari botol plastik bekas yang dicat warna-warni dengan hiasan tali rami",
+    };
+  }
+
+  // Generic fallback for other objects
+  return {
+    nama: `Kerajinan dari ${primaryObject}`,
+    bahan: [`${primaryObject} bekas`, "Gunting", "Lem", "Hiasan"],
+    langkah: [
+      "Siapkan material utama",
+      "Bersihkan dari kotoran",
+      "Potong sesuai pola yang diinginkan",
+      "Rangkai bagian-bagian dengan lem",
+      "Tambahkan hiasan sesuai selera",
+    ],
+    tingkatKesulitan: "Sedang",
+    kategori: "Kerajinan Tangan",
+    estimasiWaktu: "1 jam",
+    imagePrompt: `Kerajinan tangan kreatif dari ${primaryObject} bekas yang dihias dengan indah`,
+  };
 };
 
-// Route untuk mendapatkan saran kerajinan berdasarkan objek yang terdeteksi (termasuk multi-objek)
-router.post('/suggest', (req, res) => {
+// Route untuk mendapatkan saran kerajinan berdasarkan objek yang terdeteksi
+router.post("/suggest", async (req, res) => {
   try {
+    console.log("API suggest dipanggil");
     const { objects } = req.body;
-    
+
     if (!objects || !Array.isArray(objects)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Format permintaan tidak valid. Harap sertakan array "objects".'
+      console.error("Format permintaan tidak valid:", req.body);
+      return res.status(400).json({
+        success: false,
+        message:
+          'Format permintaan tidak valid. Harap sertakan array "objects".',
       });
     }
-    
-    console.log('Objek yang terdeteksi:', objects);
 
-    // 1. Pembobotan objek berdasarkan confidence score
-    let weightedObjects = {};
-    
-    // Konversi objek terdeteksi ke objek dalam database dengan pembobotan
-    objects.forEach(obj => {
-      const mappedClass = objectMapping[obj.class] || obj.class;
-      
-      // Jika objek sudah ada dalam weightedObjects, tambahkan score-nya
-      if (weightedObjects[mappedClass]) {
-        weightedObjects[mappedClass] += obj.score;
-      } else {
-        weightedObjects[mappedClass] = obj.score;
-      }
-    });
-    
-    console.log('Objek terpetakan dengan bobot:', weightedObjects);
-    
-    // 2. Urutkan objek berdasarkan bobot tertinggi
-    const sortedObjects = Object.entries(weightedObjects)
-      .sort((a, b) => b[1] - a[1])
-      .map(entry => entry[0]);
-    
-    console.log('Objek terurut berdasarkan bobot:', sortedObjects);
+    console.log("Objek yang terdeteksi:", objects);
 
-    // 3. Jika mendeteksi lebih dari 1 objek dengan confidence tinggi, coba cari kerajinan multi-objek
-    if (sortedObjects.length > 1) {
-      // Ambil 3 objek teratas untuk mencari kombinasi
-      const topObjects = sortedObjects.slice(0, 3);
-      
-      // Cari kerajinan yang cocok dengan kombinasi objek
-      const matchingMultiCrafts = craftDatabaseMulti.filter(craft => {
-        // Hitung berapa banyak objek terdeteksi yang cocok dengan kombinasi
-        const matchingCount = craft.kombinasi.filter(item => topObjects.includes(item)).length;
-        
-        // Jika setidaknya 2 objek cocok, anggap sebagai match
-        return matchingCount >= 2;
-      });
-      
-      if (matchingMultiCrafts.length > 0) {
-        // Pilih kerajinan secara acak dari yang cocok
-        const randomMultiCraft = matchingMultiCrafts[Math.floor(Math.random() * matchingMultiCrafts.length)];
-        
-        console.log('Merekomendasikan kerajinan multi-objek:', randomMultiCraft.id);
+    try {
+      // 1. Gunakan ML Service untuk meningkatkan deteksi objek dan mendapatkan saran material
+      console.log("Memproses objek dengan ML...");
+      const { enhancedObjects, materialSuggestions } =
+        await mlService.suggestCrafts(objects);
 
-        // Generate image prompt jika belum ada
-        const imagePrompt = randomMultiCraft.imagePrompt || `A creative craft made from recycled materials: ${randomMultiCraft.nama}, made from ${randomMultiCraft.kombinasi.join(', ')}`;
-        
+      console.log("Objek dengan peningkatan ML:", enhancedObjects);
+      console.log("Saran material:", materialSuggestions);
+
+      // 2. Gunakan Gemini untuk mendapatkan rekomendasi kerajinan
+      console.log("Meminta rekomendasi dari Gemini...");
+      try {
+        // Cek apakah API key tersedia
+        if (!process.env.GEMINI_API_KEY) {
+          throw new Error("Gemini API key tidak ditemukan di konfigurasi");
+        }
+
+        // Log API key yang digunakan (secara aman)
+        const keyPreview =
+          process.env.GEMINI_API_KEY.substring(0, 10) +
+          "..." +
+          process.env.GEMINI_API_KEY.substring(
+            process.env.GEMINI_API_KEY.length - 4
+          );
+        console.log(`Menggunakan Gemini API key: ${keyPreview}`);
+
+        // Panggil Gemini service
+        const aiRecommendation = await geminiService.getCraftRecommendation(
+          enhancedObjects,
+          materialSuggestions
+        );
+
+        console.log("Rekomendasi dari Gemini berhasil diterima");
+
+        // 3. Kembalikan hasil rekomendasi lengkap ke client
         return res.json({
           success: true,
           suggestion: {
-            ...randomMultiCraft,
-            isMulti: true,
-            imagePrompt
+            ...aiRecommendation.recommendation,
+            isAI: true,
+            aiSource: "gemini",
+            // Add friendly descriptions for material difficulty level
+            tingkatKesulitanInfo: getTingkatKesulitanInfo(
+              aiRecommendation.recommendation.tingkatKesulitan
+            ),
+            // Add estimated time description
+            estimasiWaktuInfo: getEstimasiWaktuInfo(
+              aiRecommendation.recommendation.estimasiWaktu
+            ),
+            // Add material availability hints
+            bahanInfo: getMaterialInfo(aiRecommendation.recommendation.bahan),
+            // Process the raw response for better readability
+            cleanResponse: geminiService.processResponse(
+              aiRecommendation.rawResponse
+            ),
           },
-          detectedObjects: objects.map(obj => ({
+          materials: materialSuggestions,
+          detectedObjects: objects.map((obj) => ({
             class: obj.class,
             mappedClass: objectMapping[obj.class] || obj.class,
-            score: obj.score
-          }))
+            score: obj.score,
+            enhanced: enhancedObjects.find((e) => e.class === obj.class).score,
+          })),
+          fullAIResponse: aiRecommendation.rawResponse,
         });
-      }
-    }
-    
-    // 4. Jika tidak ada kerajinan multi-objek yang cocok, kembali ke metode single-object
-    for (const mappedObj of sortedObjects) {
-      // Cek jika ada kerajinan khusus berdasarkan objek terdeteksi
-      const craftKeys = Object.keys(craftDatabase).filter(key => key.startsWith(mappedObj));
-      
-      if (craftKeys.length > 0) {
-        // Jika ada beberapa kerajinan dalam kategori yang sama, pilih secara acak
-        const randomCraftKey = craftKeys[Math.floor(Math.random() * craftKeys.length)];
-        
-        console.log('Merekomendasikan kerajinan single-object:', randomCraftKey);
+      } catch (apiError) {
+        console.error(
+          "Error saat mendapatkan rekomendasi dari Gemini:",
+          apiError
+        );
 
-        // Generate image prompt jika belum ada
-        const craftItem = craftDatabase[randomCraftKey];
-        const imagePrompt = craftItem.imagePrompt || `A creative DIY craft: ${craftItem.nama}, made from recycled ${mappedObj}, upcycled and artistic`;
-        
-        return res.json({
-          success: true,
-          suggestion: {
-            ...craftDatabase[randomCraftKey],
-            isMulti: false,
-            imagePrompt
+        // Kirim error detail ke client
+        return res.status(500).json({
+          success: false,
+          message:
+            "Gagal mendapatkan rekomendasi dari Gemini. Silakan coba lagi.",
+          error: {
+            message: apiError.message,
+            details: apiError.response?.data || "No detailed error available",
           },
-          detectedObjects: objects.map(obj => ({
-            class: obj.class,
-            mappedClass: objectMapping[obj.class] || obj.class,
-            score: obj.score
-          }))
         });
       }
-    }
+    } catch (processingError) {
+      console.error("Error saat memproses data objek:", processingError);
 
-    // 5. Jika tidak ada yang cocok sama sekali
-    return res.json({
-      success: true,
-      suggestion: {
-        nama: 'Tidak ada saran spesifik',
-        bahan: ['Barang yang terdeteksi tidak ada dalam database kami'],
-        langkah: ['Silakan coba unggah gambar dengan barang bekas yang lain seperti botol, kaleng, kardus, kain, atau koran'],
-        image: 'https://via.placeholder.com/150?text=Tidak+Ditemukan',
-        isMulti: false,
-        imagePrompt: 'Generic recycling crafts with household items like bottles, cans, cardboard, and fabric'
-      },
-      detectedObjects: objects.map(obj => ({
-        class: obj.class,
-        mappedClass: objectMapping[obj.class] || obj.class,
-        score: obj.score
-      }))
-    });
+      // Lempar error ke client tanpa fallback ke data lokal
+      return res.status(500).json({
+        success: false,
+        message: "Error pada pemrosesan objek terdeteksi. Silakan coba lagi.",
+        error: processingError.message,
+      });
+    }
   } catch (error) {
-    console.error('Error dalam API suggest:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Terjadi kesalahan saat memproses permintaan.'
+    console.error("Error dalam API suggest:", error);
+    console.error("Stack trace:", error.stack);
+
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan saat memproses permintaan.",
+      error: error.message,
+      stack: process.env.NODE_ENV === "production" ? null : error.stack,
     });
   }
 });
 
 // API untuk menghasilkan gambar dari prompt kerajinan
-router.post('/generate-image', (req, res) => {
+router.post("/generate-image", (req, res) => {
   try {
     const { prompt } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({
         success: false,
-        message: 'Prompt tidak boleh kosong'
+        message: "Prompt tidak boleh kosong",
       });
     }
-    
+
     // Untuk implementasi produksi, Anda bisa menggunakan layanan AI seperti:
-    // 1. OpenAI DALL-E API
+    // 1. OpenAI DALL-E API,
     // 2. Stable Diffusion API
-    // 3. Midjourney API
+    // 3. Midjourney API,
     // 4. dll
-    
-    // Enhanceed prompt untuk hasil yang lebih baik
+
+    // Enhanced prompt untuk hasil yang lebih baik
     const enhancedPrompt = `${prompt}, high quality, detailed, vibrant colors, natural lighting, sustainable, upcycled, eco-friendly`;
-    
+
     // Enkode prompt untuk URL
     const encodedPrompt = encodeURIComponent(enhancedPrompt);
-    
-    // Untuk demo, kita gunakan Unsplash API dengan keyword dari prompt
+
+    // Untuk demo, kita gunakan Unsplash API dengan keyword dari prompt umum
     const keywords = extractKeywords(prompt);
     const imageUrl = `https://source.unsplash.com/featured/?${encodedPrompt}`;
-    
+
     // Return URL gambar
     return res.json({
       success: true,
       imageUrl: imageUrl,
-      prompt: enhancedPrompt
+      prompt: enhancedPrompt,
     });
   } catch (error) {
-    console.error('Error dalam API generate-image:', error);
+    console.error("Error dalam API generate-image:", error);
     res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan saat menghasilkan gambar'
+      message: "Terjadi kesalahan saat menghasilkan gambar",
     });
   }
 });
@@ -285,27 +223,42 @@ router.post('/generate-image', (req, res) => {
 // Fungsi untuk mengekstrak keyword dari prompt
 function extractKeywords(prompt) {
   // Hapus kata-kata umum
-  const commonWords = ['a', 'an', 'the', 'and', 'or', 'but', 'with', 'from', 'made', 'using', 'of', 'in', 'on', 'by', 'to'];
-  
+  const commonWords = [
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "with",
+    "from",
+    "made",
+    "using",
+    "of",
+    "in",
+    "on",
+    "by",
+    "to",
+  ];
+
   // Pisahkan prompt menjadi kata-kata
   const words = prompt.toLowerCase().split(/\s+/);
-  
+
   // Filter kata-kata umum
-  const keywords = words.filter(word => {
+  const keywords = words.filter((word) => {
     // Hapus karakter non-alfanumerik
-    const cleanWord = word.replace(/[^\w\s]/gi, '');
+    const cleanWord = word.replace(/[^\w\s]/gi, "");
     // Filter kata-kata pendek dan kata-kata umum
     return cleanWord.length > 3 && !commonWords.includes(cleanWord);
   });
-  
+
   // Ambil maksimal 3 keyword
-  return [...new Set(keywords)].slice(0, 3).join(',');
+  return [...new Set(keywords)].slice(0, 3).join(",");
 }
 
 // Route untuk mendapatkan kerajinan spesifik berdasarkan ID
-router.get('/craft/:id', (req, res) => {
+router.get("/craft/:id", (req, res) => {
   const { id } = req.params;
-  
   try {
     // Cari di database single-object
     const craftKeys = Object.keys(craftDatabase);
@@ -314,35 +267,211 @@ router.get('/craft/:id', (req, res) => {
         success: true,
         craft: {
           ...craftDatabase[id],
-          isMulti: false
-        }
+          isMulti: false,
+        },
       });
     }
-    
+
     // Cari di database multi-object
-    const multiCraft = craftDatabaseMulti.find(craft => craft.id === id);
+    const multiCraft = craftDatabaseMulti.find((craft) => craft.id === id);
     if (multiCraft) {
       return res.json({
         success: true,
         craft: {
           ...multiCraft,
-          isMulti: true
-        }
+          isMulti: true,
+        },
       });
     }
-    
-    // Jika tidak ditemukan
+
+    // Jika tidak ditemukan,
     return res.status(404).json({
       success: false,
-      message: 'Kerajinan tidak ditemukan'
+      message: "Kerajinan tidak ditemukan",
     });
   } catch (error) {
-    console.error('Error dalam API get craft:', error);
+    console.error("Error dalam API get craft:", error);
     res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan saat mengambil data kerajinan'
+      message: "Terjadi kesalahan saat mengambil data kerajinan",
     });
   }
 });
+
+// API untuk test koneksi ke Deepseek
+router.get("/test-deepseek", async (req, res) => {
+  try {
+    console.log("Testing koneksi ke Deepseek API...");
+    // Test koneksi sederhana ke Deepseek
+    const testPrompt =
+      "Berikan ide kerajinan sederhana menggunakan botol plastik.";
+    const response = await axios.post(
+      "https://api.deepseek.com/v1/chat/completions",
+      {
+        model: "deepseek-chat",
+        messages: [
+          {
+            role: "user",
+            content: testPrompt,
+          },
+        ],
+        max_tokens: 100,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer sk-78afb20a89524468845b3e159c78a78c`,
+        },
+      }
+    );
+
+    console.log("Test koneksi berhasil:", response.status);
+    console.log("Response data:", response.data);
+
+    return res.json({
+      success: true,
+      message: "Koneksi ke Deepseek API berhasil",
+      responseData: response.data,
+    });
+  } catch (error) {
+    console.error("Test koneksi gagal:", error);
+    let errorDetails = {
+      message: error.message,
+    };
+    if (error.response) {
+      errorDetails.status = error.response.status;
+      errorDetails.data = error.response.data;
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Koneksi ke Deepseek API gagal",
+      error: errorDetails,
+    });
+  }
+});
+
+// API untuk tes koneksi ke Gemini
+router.post("/test-gemini", async (req, res) => {
+  try {
+    console.log("Testing koneksi ke Gemini API...");
+    const { prompt } = req.body;
+
+    // Use default prompt if none provided
+    const testPrompt =
+      prompt || "Berikan ide kerajinan sederhana menggunakan botol plastik.";
+
+    // Use API key from environment variable
+    const keyToUse = process.env.GEMINI_API_KEY;
+
+    if (!keyToUse) {
+      return res.status(400).json({
+        success: false,
+        message: "API key tidak ditemukan",
+      });
+    }
+
+    // Log API key being used (securely)
+    const keyPreview =
+      keyToUse.substring(0, 10) +
+      "..." +
+      keyToUse.substring(keyToUse.length - 4);
+    console.log(`Menggunakan API key: ${keyPreview}`);
+
+    // Gemini API URL (key as query param)
+    const apiUrl = `${process.env.GEMINI_API_URL}?key=${keyToUse}`;
+
+    const response = await axios.post(
+      apiUrl,
+      {
+        contents: [
+          {
+            parts: [{ text: testPrompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 100,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Test koneksi Gemini berhasil:", response.status);
+
+    return res.json({
+      success: true,
+      message: "Koneksi ke Gemini API berhasil",
+      responseData: response.data,
+      usedKey: keyPreview,
+      tokenUsage: response.data.usageMetadata,
+    });
+  } catch (error) {
+    console.error("Test koneksi Gemini gagal:", error);
+    let errorDetails = {
+      message: error.message,
+    };
+    if (error.response) {
+      errorDetails.status = error.response.status;
+      errorDetails.data = error.response.data;
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Koneksi ke Gemini API gagal",
+      error: errorDetails,
+    });
+  }
+});
+
+// Helper functions for user-friendly output
+function getTingkatKesulitanInfo(level) {
+  switch (level.toLowerCase()) {
+    case "mudah":
+      return "Cocok untuk pemula, anak-anak dengan bantuan orang tua, atau pengerjaan cepat.";
+    case "sulit":
+      return "Membutuhkan ketelitian tinggi, alat khusus, atau pengalaman sebelumnya.";
+    default: // sedang
+      return "Dapat dikerjakan oleh kebanyakan orang dengan keterampilan dasar.";
+  }
+}
+
+function getEstimasiWaktuInfo(waktu) {
+  if (waktu.includes("30 menit")) {
+    return "Proyek cepat, bisa diselesaikan dalam waktu singkat.";
+  } else if (waktu.includes("2-3 jam") || waktu.includes("beberapa jam")) {
+    return "Proyek yang membutuhkan waktu, sebaiknya disiapkan dengan baik.";
+  } else {
+    return "Proyek dengan durasi menengah, bisa diselesaikan dalam satu sesi.";
+  }
+}
+
+function getMaterialInfo(materials) {
+  const commonMaterials = materials.filter(
+    (m) =>
+      m.toLowerCase().includes("botol") ||
+      m.toLowerCase().includes("kardus") ||
+      m.toLowerCase().includes("gunting") ||
+      m.toLowerCase().includes("lem") ||
+      m.toLowerCase().includes("cat")
+  );
+
+  const rareMaterials = materials.filter(
+    (m) =>
+      m.toLowerCase().includes("khusus") ||
+      m.toLowerCase().includes("led") ||
+      m.toLowerCase().includes("elektronik")
+  );
+
+  if (rareMaterials.length > 0) {
+    return "Beberapa bahan mungkin perlu dibeli khusus.";
+  } else if (commonMaterials.length === materials.length) {
+    return "Semua bahan mudah ditemukan di rumah atau toko terdekat.";
+  } else {
+    return "Sebagian besar bahan mudah didapatkan.";
+  }
+}
 
 module.exports = router;

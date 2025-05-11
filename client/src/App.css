@@ -1,5 +1,5 @@
 /* Gaya utama aplikasi BarbekRaft dengan UI modern dan aesthetic */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 :root {
   --primary-color: #2ecc71;
@@ -29,7 +29,7 @@
 
 body {
   background-color: var(--light-color);
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   margin: 0;
   padding: 0;
   color: var(--dark-color);
@@ -44,7 +44,11 @@ body {
 
 /* Navbar styling */
 .navbar {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-dark)
+  );
   box-shadow: var(--shadow-md);
   padding: 1rem 0;
   position: sticky;
@@ -140,7 +144,7 @@ body {
 }
 
 .btn::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -218,7 +222,8 @@ body {
 }
 
 /* Form controls */
-.form-control, .form-select {
+.form-control,
+.form-select {
   border-radius: var(--radius-md);
   padding: 0.6rem 1rem;
   border: 1px solid var(--light-gray);
@@ -226,7 +231,8 @@ body {
   transition: var(--transition);
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.15);
 }
@@ -312,6 +318,86 @@ body {
   font-weight: 500;
   padding: 0.35em 0.65em;
   border-radius: var(--radius-sm);
+}
+
+/* Badge untuk menandai AI-generated content */
+.badge-ai {
+  background-color: #3498db;
+  background-image: linear-gradient(135deg, #3498db, #9b59b6);
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-ai i {
+  font-size: 0.8rem;
+}
+
+/* AI Source Badges */
+.badge-ai-deepseek {
+  background-image: linear-gradient(135deg, #3498db, #9b59b6);
+  color: white;
+}
+
+.badge-ai-gemini {
+  background-image: linear-gradient(135deg, #1abc9c, #2ecc71);
+  color: white;
+}
+
+.badge-ai-openai {
+  background-image: linear-gradient(135deg, #e74c3c, #f39c12);
+  color: white;
+}
+
+/* Styling untuk pre dan code block */
+pre {
+  background-color: #f8f9fa;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  border: 1px solid #e9ecef;
+}
+
+/* Styling untuk detail/summary */
+details {
+  margin-top: 1.5rem;
+}
+
+summary {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+summary:hover {
+  background-color: var(--light-gray);
+}
+
+/* AI generated image styling */
+.ai-generated-image {
+  position: relative;
+}
+
+.ai-image-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(52, 152, 219, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}
+
+/* Tambahkan gaya untuk cursor pointer */
+.cursor-pointer {
+  cursor: pointer;
 }
 
 /* Utilities */
@@ -473,10 +559,14 @@ body {
 }
 
 .craft-suggestion-card .card-header {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-dark)
+  );
 }
 
-/* Detection result styling */
+/* Detection item styling */
 .detection-item {
   display: flex;
   align-items: center;
@@ -504,39 +594,6 @@ body {
   margin-right: 1rem;
   background-color: var(--primary-ultra-light);
   color: var(--primary-color);
-}
-
-.detection-item-content {
-  flex: 1;
-}
-
-.detection-item-confidence {
-  width: 60px;
-  text-align: right;
-  font-weight: 600;
-}
-
-/* Upload area styling */
-.upload-area {
-  border-radius: var(--radius-md);
-  border-style: dashed !important;
-  padding: 2rem !important;
-  transition: var(--transition);
-}
-
-.upload-area:hover {
-  background-color: var(--primary-ultra-light);
-  border-color: var(--primary-color);
-}
-
-.upload-area i {
-  font-size: 3rem;
-  color: var(--primary-color);
-  transition: var(--transition);
-}
-
-.upload-area:hover i {
-  transform: scale(1.1);
 }
 
 /* Animation for loading states */
@@ -585,25 +642,29 @@ body {
 
 /* Print styles */
 @media print {
-  .navbar, .form-control, .alert, .btn, .footer {
+  .navbar,
+  .form-control,
+  .alert,
+  .btn,
+  .footer {
     display: none !important;
   }
-  
+
   .card {
     box-shadow: none;
     border: 1px solid var(--light-gray);
   }
-  
+
   .container {
     width: 100%;
     max-width: 100%;
     padding: 0;
   }
-  
+
   body {
     font-size: 12pt;
   }
-  
+
   .card-header {
     background-color: #f8f9fa !important;
     color: #000 !important;
@@ -658,28 +719,144 @@ body {
   .navbar-brand {
     font-size: 1.5rem;
   }
-  
+
   .navbar-text {
     display: none;
   }
-  
+
   .card {
     margin-bottom: 1rem;
   }
-  
+
   .card-header {
     padding: 1rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   .btn {
     padding: 0.5rem 1rem;
   }
-  
+
   .container {
     padding: 1rem;
+  }
+}
+
+/* Penyesuaian mobile untuk card suggestion */
+@media (max-width: 576px) {
+  .craft-suggestion-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .craft-suggestion-card .card-header .badge {
+    margin-top: 0.5rem;
+  }
+
+  .craft-suggestion-card .card-header .btn {
+    margin-top: 0.5rem;
+    align-self: flex-end;
+  }
+
+  .craft-image-container {
+    margin-top: 1rem;
+  }
+}
+
+/* Enhanced Craft Suggestion UI Styles */
+.craft-suggestion-card {
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.craft-title {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.material-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.material-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.step-card {
+  transition: all 0.3s ease;
+}
+
+.step-card:hover {
+  transform: translateX(5px);
+}
+
+.section-header {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.section-icon {
+  background-color: rgba(46, 204, 113, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.craft-image-container {
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.craft-image-container img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.craft-image-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Badge styling */
+.badge {
+  border-radius: 6px;
+  padding: 0.5em 0.8em;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+/* Print-friendly styles */
+@media print {
+  .craft-suggestion-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .section-header {
+    break-inside: avoid;
+  }
+
+  .step-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .btn {
+    display: none;
   }
 }
